@@ -1,8 +1,10 @@
 ﻿<?php
+// TODO: auslagern in ht {
 include('Crypt/RSA.php');
 $cryptMode = CRYPT_RSA_ENCRYPTION_PKCS1;
 $privateKeyPassword = '1234';
 $privateKeyFile = 'private.pem';
+// }
 
 try
 {
@@ -15,7 +17,7 @@ try
 		$user = $array[0];
 		$pass = $array[1];
 		$timeDiff = microtime(true)*1000 - $array[2];
-		$valid = $timeDiff > 0 && $timeDiff < 10*1000;
+		$valid = $timeDiff > 0 && $timeDiff < 10*1000; // 10s
 		
 		if(!$valid)
 		{
@@ -29,7 +31,7 @@ try
 		}
 		else
 		{
-			// nur gibt gibts Erfolg
+			// nur hier gibts Erfolg
 			header('Content-type: application/json');
 			$result['user'] = $user;
 			$result['pass'] = $pass;
@@ -72,6 +74,18 @@ function decrypt($encrypted)
 	
 function isLoginValid($user, $pass)
 {
-	return true; // TODO
+	session_start();
+	$userDb = "Krämer";
+	$passDb = "123";
+	if (strcmp($user, $userDb) == 0 && strcmp($pass, $passDb) == 0) // TODO
+	{
+		// login is valid
+		$_SESSION['user'] = $user;
+		return true; // TODO: return jwt?
+	}
+	// login is invalid
+	$_SESSION['user'] = null;
+	closeSession();
+	return false;
 }
 ?>

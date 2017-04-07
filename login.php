@@ -1,30 +1,77 @@
 ﻿<?php
 include('Crypt/RSA.php');
 $cryptMode = CRYPT_RSA_ENCRYPTION_PKCS1;
+$privateKeyPassword = '1234';
+$privateKeyFile = 'private.pem';
 
-if(isset($_POST['encrypted']))
+try
 {
-	$encryptedFromPost = hex2bin($_POST['encrypted']);
-	
-	// decrypt
+	if(isset($_POST['encrypted']))
+	{	
+		$decrypted = decrypt(hex2bin($_POST['encrypted']));
+		
+		$array = explode("\n", $decrypted);
+		$result = array();
+		$user = $array[0];
+		$pass = $array[1];
+		$timeDiff = microtime(true)*1000 - $array[2];
+		$valid = $timeDiff > 0 && $timeDiff < 10*1000;
+		
+		if(!$valid)
+		{
+			http_response_code(408); // Request Time-out
+			die();
+		}
+		else if(!isLoginValid($user, $pass))
+		{
+			http_response_code(401); // Unauthorized
+			die();
+		}
+		else
+		{
+			// nur gibt gibts Erfolg
+			header('Content-type: application/json');
+			$result['user'] = $user;
+			$result['pass'] = $pass;
+			$result['valid'] = $valid;
+			echo json_encode($result);
+			die();
+		}
+	}
+	else
+	{
+		// header('Parameter-missing: encrypted');
+		http_response_code(406); // Not Acceptable
+		die();
+	}
+}
+catch(Exception $e)
+{
+	http_response_code(500); // Internal Server Error
+	var_dump($e->getMessage());
+	die();
+}
+http_response_code(400); // Bad Request
+die();
+
+function decrypt($encrypted)
+{
 	$rsa = new Crypt_RSA();
-	$rsa->setPassword('1234');
-	$rsa->loadKey(file_get_contents('private.pem'));
+	$rsa->setPassword($privateKeyPassword);
+	$rsa->loadKey(file_get_contents($privateKeyFile));
 	$rsa->setEncryptionMode($cryptMode);
-	$decrypted = $rsa->decrypt($encryptedFromPost);
+	$decrypted = $rsa->decrypt($encrypted);
 	
 	//$ne = $rsa->getPublicKey(CRYPT_RSA_PUBLIC_FORMAT_RAW);
 	//echo "<p>n:<br/>".$ne["n"]->toHex()."</p>";
 	//echo "<p>e:<br/>".$ne["e"]->toHex()."</p>";
 	//echo "<p>decryptedFromPost:<br/>".$decrypted."</p>";
 	
-	$array = explode("\n", $decrypted);
-	$result = array();
-	$result['user'] = $array[0];
-	$result['pass'] = $array[1];
-	$timeDiff = microtime(true)*1000 - $array[2];
-	$result['valid'] = $timeDiff > 0 && $timeDiff < 10*1000;
-	header('Content-type: application/json');
-	echo json_encode($result);
+	return $decrypted;
+}
+	
+function isLoginValid($user, $pass)
+{
+	return true; // TODO
 }
 ?>

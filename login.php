@@ -75,7 +75,7 @@ function decrypt($encrypted)
 function isLoginValid($user, $pass)
 {
 	session_start();
-	$userDb = "Krämer";
+	$userDb = "mk-84";
 	$passDb = "123";
 	if (strcmp($user, $userDb) == 0 && strcmp($pass, $passDb) == 0) // TODO
 	{

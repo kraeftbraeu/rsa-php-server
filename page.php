@@ -1,1 +1,1 @@
-<?php include('C:/projekte/mk-jsrsa/rsa-client-php.htm'); ?>
+<?php include('C:/projekte/rsa-js-client/rsa-client-php.htm'); ?>
